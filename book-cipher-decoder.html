@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="module">
+  import { createApp } from 'https://unpkg.com/petite-vue?module'
+
+  createApp({
+    // exposed to all expressions
+    numbers: [],
+    sentences: [],
+    mapping: {},
+    ciphertext: '',
+    mapString: '',
+    plaintext: '',
+    showMap: false,
+    // methods
+    separateSentences() {
+      this.sentences = this.ciphertext.split(' .   ')
+      let lastIndex = this.sentences.length - 1
+      this.sentences[lastIndex] = this.sentences[lastIndex].slice(0, -2)
+
+      this.separateWords()
+    },
+    separateWords() {
+      let tempSentences = []
+      this.sentences.forEach((sentence, index) => {
+        tempSentences[index] = sentence.split('   ')
+      })
+      this.sentences = tempSentences
+      this.separateLetters()
+    },
+    separateLetters() {
+      let tempSentences = []
+      this.sentences.forEach((sentence, sentenceIndex) => {
+        tempSentences[sentenceIndex] = []
+        sentence.forEach((word, wordIndex) => {
+          tempSentences[sentenceIndex][wordIndex] = word.split(' ').map((letter) => {
+            return parseInt(letter)
+          })
+        })
+      })
+      this.sentences = tempSentences
+      this.getUniqueLetters()
+    },
+    getUniqueLetters() {
+      let cipherLetters = []
+      this.sentences.forEach((sentence, sentenceIndex) => {
+        sentence.forEach((word, wordIndex) => {
+          word.forEach((letter) => {
+            if (!cipherLetters.includes(letter)) {
+              cipherLetters.push(letter)
+            }
+          })
+        })
+      })
+      cipherLetters.sort((a, b) => {
+        return a - b
+      })
+      this.numbers = cipherLetters
+      this.setMapping()
+    },
+    setMapping() {
+      let tempMapping = {}
+      this.numbers.forEach((letter) => {
+        console.log(String.fromCharCode(96 + letter))
+        tempMapping[letter] = String.fromCharCode(96 + letter)
+      })
+      console.log(tempMapping)
+      this.mapping = tempMapping
+      this.decipher()
+    },
+    replaceLetter(number) {
+      return this.mapping[number]
+    },
+    importMap() {
+      this.mapping = JSON.parse(this.mapString)
+      this.decipher()
+    },
+    decipher() {
+      let plaintext = this.ciphertext
+      plaintext = plaintext.replaceAll('   ', '_')
+      let reverseNumbers = this.numbers
+      reverseNumbers.sort((a, b) => {
+        return b - a
+      })
+      reverseNumbers.forEach((number) => {
+        plaintext = plaintext.replaceAll(number, this.mapping[number])
+      })
+      this.plaintext = plaintext.replaceAll(' ', '').replaceAll('_', ' ')
+    },
+    toggleMap() {
+      this.showMap = !this.showMap
+    }
+  }).mount()
+</script>
+<style>
+    /* Page header */
+    .page-header {
+        align-self: center;
+    }
+
+    /* region Header inputs and labels */
+    .inputs-container {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 16px;
+    }
+
+    .input-wrapper {
+        display: flex;
+        flex-direction: column;
+        margin: 8px;
+        width: 50%;
+        height: 200px;
+    }
+    .header-button-wrapper{
+        align-self: center;
+    }
+
+    .h-label {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .h-input {
+        height: 100%;
+    }
+
+    .ciphertext-label {
+
+    }
+
+    .ciphertext-input {
+
+    }
+
+    .map-string-label {
+
+    }
+
+    .map-string-input {
+
+    }
+
+    .import-button {
+        margin: 16px 24px 0 24px;
+        align-self: center;
+        border-radius: 6px;
+    }
+
+    .import-cipher-button {
+        color: white;
+        background: green;
+    }
+
+    .import-map-button {
+        background: blue;
+        color: white;
+    }
+
+    .show-map-button {
+        background: darkblue;
+        color: white;
+    }
+
+    /* endregion */
+
+    /* region Output container*/
+    .output-container {
+
+    }
+
+    .mapping-output {
+
+    }
+
+    .plaintext-output {
+        font-size: 16px;
+
+    }
+
+    /* endregion */
+
+    /* region Map inputs */
+    .map-input-container {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 16px;
+        align-self: center;
+    }
+
+    .map-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        margin: 8px;
+        text-align: center;
+    }
+
+    .map-input-label {
+
+    }
+
+    .map-input {
+        width: 24px;
+        text-align: center;
+    }
+
+    /* endregion */
+
+    /* region sentence display */
+    .all-sentences-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .sentence-container {
+        margin: 8px 16px 0 0;
+    }
+
+    .sentence-label {
+
+    }
+
+    .sentence-wrapper {
+
+    }
+
+    .word-wrapper {
+
+    }
+
+    .cipher-letter {
+
+    }
+
+    .plaintext-letter {
+
+    }
+
+    /* endregion */
+
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+</style>
+<body>
+<h1 class="page-header">Book cipher manual solve tool</h1>
+
+<div class="inputs-container">
+
+    <div class="input-wrapper">
+        <label class="h-label ciphertext-label" for="ciphertext">Ciphertext</label>
+        <textarea class="h-input ciphertext-input" id="ciphertext" v-model="ciphertext" type="text"></textarea>
+        <span class="header-button-wrapper">
+        <button class="import-button import-cipher-button" @click="separateSentences" type="button">Import Cipher
+        </button>
+            </span>
+    </div>
+
+    <div class="input-wrapper">
+        <label class="h-label map-string-label" for="map-string">Map String</label>
+        <textarea class="h-input map-string-input" id="map-string" v-model="mapString" type="text"></textarea>
+        <span class="header-button-wrapper">
+            <button class="import-button import-map-button" @click="importMap" type="button">Import Map</button>
+            <button class="import-button show-map-button" @click="toggleMap" type="button">{{showMap ? 'Hide ' : 'Show '}} Map</button>
+        </span>
+    </div>
+
+</div>
+
+<div class="output-container">
+    <div class="plaintext-output">
+        <b>Plaintext:</b> {{plaintext}}
+    </div>
+    <div v-if="showMap" class="mapping-output">
+        Mapping: {{mapping}}
+    </div>
+</div>
+
+<div class="map-input-container">
+    <div class="map-input-wrapper" v-for="(letter, number) in mapping" :id="'mapping-'+number">
+        <label :for="'mapping-'+number+'-input'" class="map-input-label">{{number}}</label>
+        <input class="map-input" v-model="mapping[number]" @input="decipher" type="text"
+               :id="'mapping-'+number+'-input'"/>
+    </div>
+</div>
+
+
+<div class="all-sentences-container">
+    <div class="sentence-container" v-for="(sentence, sentenceIndex) in sentences" :id="'sentence-'+sentenceIndex">
+        <p class="sentence-label">
+            Sentence {{sentenceIndex+1}}:
+        </p>
+        <div class="sentence-wrapper">
+            <p class="word-wrapper" v-for="(word, wordIndex) in sentence"
+               :id="'sentence-'+sentenceIndex+'-word-'+wordIndex">
+                <span class="cipher-letter" v-for="(letter, letterIndex) in word"
+                      :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex"
+                      :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-number' "
+                >
+                    {{letter}}
+                </span>
+                {{"/"}}
+                <span class="plaintext-letter" v-for="(letter, letterIndex) in word"
+                      :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex" :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-replaced'">
+                    {{replaceLetter(letter)}}
+                </span>
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
