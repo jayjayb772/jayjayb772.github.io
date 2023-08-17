@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Book Cipher Manual Decoder</title>
+    <title>Letter Number Manual Decoder</title>
 </head>
 <script type="module">
   import { createApp } from 'https://unpkg.com/petite-vue?module'
@@ -16,6 +16,7 @@
     mapString: '',
     plaintext: '',
     showMap: false,
+    focusNumber: 0,
     // methods
     separateSentences() {
       this.sentences = this.ciphertext.split(' .   ')
@@ -97,6 +98,16 @@
   }).mount()
 </script>
 <style>
+    .focus-letter{
+        color: white;
+        background: red;
+    }
+
+    .focus-number{
+        color: white;
+        background: blue;
+    }
+
     /* Page header */
     .page-header {
         align-self: center;
@@ -249,7 +260,7 @@
 
 </style>
 <body>
-<h1 class="page-header">Book cipher manual solve tool</h1>
+<h1 class="page-header">Letter Number manual solve tool</h1>
 
 <div class="inputs-container">
 
@@ -286,7 +297,7 @@
     <div class="map-input-wrapper" v-for="(letter, number) in mapping" :id="'mapping-'+number">
         <label :for="'mapping-'+number+'-input'" class="map-input-label">{{number}}</label>
         <input class="map-input" v-model="mapping[number]" @input="decipher" type="text"
-               :id="'mapping-'+number+'-input'"/>
+               :id="'mapping-'+number+'-input'" @focus="focusNumber = number"/>
     </div>
 </div>
 
@@ -299,15 +310,25 @@
         <div class="sentence-wrapper">
             <p class="word-wrapper" v-for="(word, wordIndex) in sentence"
                :id="'sentence-'+sentenceIndex+'-word-'+wordIndex">
-                <span class="cipher-letter" v-for="(letter, letterIndex) in word"
+                <span v-if="focusNumber == letter"
+                        class="cipher-letter letter-focus" v-for="(letter, letterIndex) in word"
                       :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex"
                       :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-number' "
                 >
                     {{letter}}
                 </span>
+                <span class="cipher-letter" v-for="(letter, letterIndex) in word"
+                      :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex"
+                      :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-number' "
+                          :class="{'focus-letter': focusNumber == letter}"
+                >
+                    {{letter}}
+                </span>
                 {{"/"}}
                 <span class="plaintext-letter" v-for="(letter, letterIndex) in word"
-                      :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex" :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-replaced'">
+                      :id="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex"
+                      :key="'sentence-'+sentenceIndex+'-word-'+wordIndex+'-letter-'+letterIndex+'-replaced'"
+                      :class="{'focus-number': focusNumber == letter}" >
                     {{replaceLetter(letter)}}
                 </span>
             </p>
